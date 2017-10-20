@@ -1,31 +1,36 @@
 //
-//  main.swift
-//  Perfect JSON API Example
+//  Lists.swift
+//  Perfect-JSON-APIPackageDescription
 //
-//  Created by Jonathan Guthrie on 2016-09-26.
-//	Copyright (C) 2015 PerfectlySoft, Inc.
-//
-//===----------------------------------------------------------------------===//
-//
-// This source file is part of the Perfect.org open source project
-//
-// Copyright (c) 2015 - 2016 PerfectlySoft Inc. and the Perfect project authors
-// Licensed under Apache License v2.0
-//
-// See http://perfect.org/licensing.html for license information
-//
-//===----------------------------------------------------------------------===//
+//  Created by Norberto Vasconcelos on 18/10/2017.
 //
 
 import PerfectLib
 import PerfectHTTP
 import PerfectHTTPServer
 
+import StORM
+import PostgresStORM
+
+// Setup Postgres DB
+PostgresConnector.host = "localhost"
+PostgresConnector.username = "norberto"
+PostgresConnector.password = "postgres"
+PostgresConnector.database = "json_api"
+PostgresConnector.port = 5432
+
+let member = Member()
+try? member.setup()
+
 // Create HTTP server.
 let server = HTTPServer()
 
 // Create the container variable for routes to be added to.
 var routes = Routes()
+
+// Testing DB
+routes.add(method: .get, uri: "/members", handler: member.getMembers)
+routes.add(method: .post, uri: "/members/add", handler: member.addMember)
 
 // Register your own routes and handlers
 // This is an example "Hello, world!" HTML route
@@ -34,7 +39,7 @@ routes.add(method: .get, uri: "/", handler: {
 	// Setting the response content type explicitly to text/html
 	response.setHeader(.contentType, value: "text/html")
 	// Adding some HTML to the response body object
-	response.appendBody(string: "<html><title>Hello, world!</title><body>Hello, world!</body></html>")
+	response.appendBody(string: "<html><title>JSON API</title><body>Welcome to the Shopping JSON API.</body></html>")
 	// Signalling that the request is completed
 	response.completed()
 	}
@@ -42,51 +47,19 @@ routes.add(method: .get, uri: "/", handler: {
 
 
 // Adding a route to handle the GET people list URL
-routes.add(method: .get, uri: "/api/v1/people", handler: {
+routes.add(method: .get, uri: "/api/v1/lists", handler: {
 	request, response in
 
-	let people = People()
+	let lists = Lists()
 
 	// Setting the response content type explicitly to application/json
 	response.setHeader(.contentType, value: "application/json")
 	// Setting the body response to the JSON list generated
-	response.appendBody(string: people.list())
+	response.appendBody(string: lists.list())
 	// Signalling that the request is completed
 	response.completed()
 	}
 )
-
-// Adding a route to handle the POST people add URL, with post body params
-routes.add(method: .post, uri: "/api/v1/people", handler: {
-	request, response in
-
-	let people = People()
-
-	// Setting the response content type explicitly to application/json
-	response.setHeader(.contentType, value: "application/json")
-	// Adding a new "person", passing the complete HTTPRequest object to the function.
-	response.appendBody(string: people.add(request))
-	// Signalling that the request is completed
-	response.completed()
-	}
-)
-
-// Adding a route to handle the POST people add via JSON
-routes.add(method: .post, uri: "/api/v1/people/json", handler: {
-	request, response in
-
-	let people = People()
-
-	// Setting the response content type explicitly to application/json
-	response.setHeader(.contentType, value: "application/json")
-	// Adding a new "person", passing the just the request's post body as a raw string to the function.
-	response.appendBody(string: people.add(request.postBodyString!))
-	// Signalling that the request is completed
-	response.completed()
-	}
-)
-
-
 
 // Add the routes to the server.
 server.addRoutes(routes)
